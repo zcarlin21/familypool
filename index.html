@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Bowl Pool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+        .chart {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Family Super Bowl Pool</h1>
+    </header>
+    <div class="container">
+        <table id="scoreTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic content will be injected here -->
+            </tbody>
+        </table>
+        <div class="chart">
+            <canvas id="scoreChart"></canvas>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchData() {
+            const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQhpHiWYzLg1vNj0t0kJc4SFw5gP4LR2gI3PaoZjHMjUoQ0PjkWTzMN0M-IDU52LJtk2h1-4Zna7O6B/pub?output=csv');
+            const text = await response.text();
+            const rows = text.split('\n').map(row => row.split(','));
+            return rows;
+        }
+
+        function updateTable(data) {
+            const tableBody = document.querySelector('#scoreTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach(([name, score]) => {
+                const row = `<tr><td>${name}</td><td>${score}</td></tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function updateChart(data) {
+            const names = data.map(([name]) => name);
+            const scores = data.map(([, score]) => parseInt(score, 10));
+
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: names,
+                    datasets: [{
+                        label: 'Scores',
+                        data: scores,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function initialize() {
+            const data = await fetchData();
+            data.shift(); // Remove headers
+            updateTable(data);
+            updateChart(data);
+        }
+
+        initialize();
+    </script>
+</body>
+</html>
